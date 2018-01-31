@@ -108,7 +108,7 @@ class TextDataset(ONMTDatasetBase):
         return scores
 
     @staticmethod
-    def make_text_examples_nfeats_tpl(path, truncate, side):
+    def make_text_examples_nfeats_tpl(path, truncate, side, character_based):
         """
         Args:
             path (str): location of a src or tgt file.
@@ -126,7 +126,7 @@ class TextDataset(ONMTDatasetBase):
         # All examples have same number of features, so we peek first one
         # to get the num_feats.
         examples_nfeats_iter = \
-            TextDataset.read_text_file(path, truncate, side)
+            TextDataset.read_text_file(path, truncate, side, character_based)
 
         first_ex = next(examples_nfeats_iter)
         num_feats = first_ex[1]
@@ -138,7 +138,7 @@ class TextDataset(ONMTDatasetBase):
         return (examples_iter, num_feats)
 
     @staticmethod
-    def read_text_file(path, truncate, side):
+    def read_text_file(path, truncate, side, character_based):
         """
         Args:
             path (str): location of a src or tgt file.
@@ -150,7 +150,10 @@ class TextDataset(ONMTDatasetBase):
         """
         with codecs.open(path, "r", "utf-8") as corpus_file:
             for i, line in enumerate(corpus_file):
-                line = line.strip().split()
+                if character_based:
+                    line = list(line)
+                else:
+                    line = line.split()
                 if truncate:
                     line = line[:truncate]
 
@@ -178,6 +181,7 @@ class TextDataset(ONMTDatasetBase):
             are the corresponding Field objects.
         """
         fields = {}
+
 
         fields["src"] = torchtext.data.Field(
             pad_token=PAD_WORD,
@@ -275,7 +279,7 @@ class ShardedTextCorpusIterator(object):
     into (example_dict, n_features) tuples when iterates.
     """
     def __init__(self, corpus_path, line_truncate, side, shard_size,
-                 assoc_iter=None):
+                 character_based=False, assoc_iter=None):
         """
         Args:
             corpus_path: the corpus file path.
@@ -301,6 +305,7 @@ class ShardedTextCorpusIterator(object):
         self.last_pos = 0
         self.line_index = -1
         self.eof = False
+        self.character_based = character_based
 
     def __iter__(self):
         """
@@ -369,7 +374,10 @@ class ShardedTextCorpusIterator(object):
         return self.n_feats
 
     def _example_dict_iter(self, line, index):
-        line = line.split()
+        if self.character_based:
+            line = list(line)
+        else:
+            line = line.split()
         if self.line_truncate:
             line = line[:self.line_truncate]
         words, feats, n_feats = TextDataset.extract_text_features(line)

@@ -173,7 +173,8 @@ def build_dataset(fields, data_type, src_path, tgt_path, src_dir=None,
                   src_seq_length_trunc=0, tgt_seq_length_trunc=0,
                   dynamic_dict=True, sample_rate=0,
                   window_size=0, window_stride=0, window=None,
-                  normalize_audio=True, use_filter_pred=True):
+                  normalize_audio=True, use_filter_pred=True,
+                  character_based=False):
 
     # Build src/tgt examples iterator from corpus files, also extract
     # number of features.
@@ -181,12 +182,12 @@ def build_dataset(fields, data_type, src_path, tgt_path, src_dir=None,
         _make_examples_nfeats_tpl(data_type, src_path, src_dir,
                                   src_seq_length_trunc, sample_rate,
                                   window_size, window_stride,
-                                  window, normalize_audio)
+                                  window, normalize_audio, character_based)
 
     # For all data types, the tgt side corpus is in form of text.
     tgt_examples_iter, num_tgt_feats = \
         TextDataset.make_text_examples_nfeats_tpl(
-            tgt_path, tgt_seq_length_trunc, "tgt")
+            tgt_path, tgt_seq_length_trunc, "tgt", character_based)
 
     if data_type == 'text':
         dataset = TextDataset(fields, src_examples_iter, tgt_examples_iter,
@@ -298,7 +299,8 @@ def build_vocab(train_dataset_files, fields, data_type, share_vocab,
 def _make_examples_nfeats_tpl(data_type, src_path, src_dir,
                               src_seq_length_trunc, sample_rate,
                               window_size, window_stride,
-                              window, normalize_audio):
+                              window, normalize_audio,
+                              character_based):
     """
     Process the corpus into (example_dict iterator, num_feats) tuple
     on source side for different 'data_type'.
@@ -307,7 +309,7 @@ def _make_examples_nfeats_tpl(data_type, src_path, src_dir,
     if data_type == 'text':
         src_examples_iter, num_src_feats = \
             TextDataset.make_text_examples_nfeats_tpl(
-                src_path, src_seq_length_trunc, "src")
+                src_path, src_seq_length_trunc, "src", character_based)
 
     elif data_type == 'img':
         src_examples_iter, num_src_feats = \

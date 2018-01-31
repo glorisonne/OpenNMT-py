@@ -164,6 +164,8 @@ def preprocess_opts(parser):
                        help="Create dynamic dictionaries")
     group.add_argument('-share_vocab', action='store_true',
                        help="Share source and target vocabulary")
+    group.add_argument('-character_based', action='store_true',
+                       help="Use characters as vocabulary")
 
     # Truncation options, for text corpus
     group = parser.add_argument_group('Pruning')
@@ -214,7 +216,7 @@ def train_opts(parser):
                        validation perplexity""")
     # GPU
     group.add_argument('-gpuid', default=[], nargs='+', type=int,
-                       help="Use CUDA on the listed devices.")
+                       help="Use CUDA on the listed devices. Counting starts with 0 for first available CUDA device")
 
     group.add_argument('-seed', type=int, default=-1,
                        help="""Random seed used for the experiments
@@ -360,6 +362,8 @@ def translate_opts(parser):
     group = parser.add_argument_group('Data')
     group.add_argument('-data_type', default="text",
                        help="Type of the source input. Options: [text|img].")
+    group.add_argument('-character_based', action='store_true',
+                       help="Use characters as vocabulary")
 
     group.add_argument('-src',   required=True,
                        help="""Source sequence to decode (one line per
